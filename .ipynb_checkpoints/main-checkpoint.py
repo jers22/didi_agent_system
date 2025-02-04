@@ -87,7 +87,7 @@ def get_data(fecha_buscar, campaing = 'didi'):
     if campaing == 'didi':
         data_general = data_general[['agent_number', 'last_update', 'last_status', 'current_page', 'progress', 'errors']]
     elif campaing == 'mutini':
-        data_general = data_general[['agent_number', 'last_update', 'last_status', 'current_page', 'progress', 'sms_sent' ,'errors']]
+        data_general = data_general[['agent_number', 'last_update', 'last_status', 'current_page', 'progress', 'sms_sent', 'calls_done' ,'errors']]
     
     data_general = data_general.sort_values(by = 'agent_number')
     return data_general, data_general_raw
@@ -366,6 +366,8 @@ if opcion == 'Agentes Mutini':
         
         total_sms = data_raw.groupby("agent_number").sms_sent.max().sum()
         
+        total_calls = data_raw.groupby("agent_number").calls_done.max().sum()
+        
                 
         
     
@@ -381,10 +383,13 @@ if opcion == 'Agentes Mutini':
                     },
                     hide_index=True,)
     
-        col1, col2  = st.columns(2)
+        col1, col2, col3  = st.columns(3)
         col1.metric(label = "Total de Cuentas gestionadas en el día", value = str(total_gestionado))
         
         col2.metric(label = "Total de SMS enviados", value = f"{total_sms:.0f}")
+        
+        col3.metric(label = "Total de llamadas realizadas", value = f"{total_calls:.0f}")
+        
         
     
         col1, col2  = st.columns(2)
