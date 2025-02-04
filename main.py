@@ -87,7 +87,14 @@ def get_data(fecha_buscar, campaing = 'didi'):
     if campaing == 'didi':
         data_general = data_general[['agent_number', 'last_update', 'last_status', 'current_page', 'progress', 'errors']]
     elif campaing == 'mutini':
-        data_general = data_general[['agent_number', 'last_update', 'last_status', 'current_page', 'progress', 'sms_sent', 'calls_done' ,'errors']]
+        if ('sms_sent' in data_general.columns) and ('calls_done' in data_general.columns):
+            data_general = data_general[['agent_number', 'last_update', 'last_status', 'current_page', 'progress', 'sms_sent', 'calls_done' ,'errors']]
+        elif ('sms_sent' in data_general.columns):
+            data_general = data_general[['agent_number', 'last_update', 'last_status', 'current_page', 'progress', 'sms_sent','errors']]
+        elif ('calls_done' in data_general.columns):
+            data_general = data_general[['agent_number', 'last_update', 'last_status', 'current_page', 'progress', 'calls_done','errors']]
+
+            
     
     data_general = data_general.sort_values(by = 'agent_number')
     return data_general, data_general_raw
@@ -363,10 +370,14 @@ if opcion == 'Agentes Mutini':
         total_gestionado = 30 * (data_raw.groupby("agent_number").page.max() + 1 - data_raw.groupby("agent_number").page.min()).sum()
         
         agentes_corriendo = data_raw.agent_number.nunique()
+
+        total_sms = 0
+        if 'sms_sent' in data_raw.columns:
+            total_sms = data_raw.groupby("agent_number").sms_sent.max().sum()
         
-        total_sms = data_raw.groupby("agent_number").sms_sent.max().sum()
-        
-        total_calls = data_raw.groupby("agent_number").calls_done.max().sum()
+        calls_done = 0
+        if 'calls_done' in data_raw.columns:
+            total_calls = data_raw.groupby("agent_number").calls_done.max().sum()
         
                 
         
