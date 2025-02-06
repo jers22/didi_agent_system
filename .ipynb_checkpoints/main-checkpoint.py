@@ -48,6 +48,21 @@ def send_shutdown_instruction(agent_number, campaing = 'didi'):
     
     return f"Apagado agente {agent_number}" if response['ResponseMetadata']['HTTPStatusCode'] == 200 else "No se mandó la instrucción"
 
+def sumar_picos(serie):
+    """
+    Suma los valores donde se detiene el incremento solo si el siguiente valor es menor.
+    Al final siempre suma el último valor.
+    """
+    suma = 0
+    for i in range(0, len(serie) - 1):
+        if serie[i] > serie[i + 1]:  # Se suma solo si es un pico local
+            suma += serie[i]
+    
+    # Siempre sumar el último valor
+    suma += serie.iloc[-1]
+    
+    return suma
+    
 # Especifica el nombre del bucket y la clave del archivo .pkl en S3
 def get_data(fecha_buscar, campaing = 'didi'):
     data_general = pd.DataFrame()
@@ -74,28 +89,44 @@ def get_data(fecha_buscar, campaing = 'didi'):
             df = pd.read_csv(BytesIO(columnas_bytes))
     
             # Realiza cualquier operación que necesites con el DataFrame
+            if 'calls_done' in df.columns:
+                df['calls_done'] = df['calls_done'].astype(int)
+                df['calls_done'] = df['calls_done'].to_frame().apply(sumar_picos)[0]
+            
+            if 'sms_sent' in df.columns:
+                df['sms_sent'] = df['sms_sent'].astype(int)
+                df['sms_sent'] = df['sms_sent'].to_frame().apply(sumar_picos)[0]
+            
             data_general = pd.concat([data_general, df])
     else:
         print(f"No se encontraron archivos en el folder {key_folder} del bucket {bucket_name}.")
         return None, None
 
     data_general_raw = data_general.copy()
-    data_general_raw["page"] = data_general_raw.current_page.apply(lambda x: int(x.split("/")[0]))
-    data_general = data_general.sort_values(by = "last_update", ascending=False).drop_duplicates(subset = ["agent_number"], keep="first")
-    data_general['progress'] = data_general.current_page.apply(lambda x: int(x.split("/")[0]) / int(x.split("/")[1]))
-
+    
+    data_general['progress'] = None
+    
+    
+    
     if campaing == 'didi':
         data_general = data_general[['agent_number', 'last_update', 'last_status', 'current_page', 'progress', 'errors']]
     elif campaing == 'mutini':
         if ('sms_sent' in data_general.columns) and ('calls_done' in data_general.columns):
             data_general = data_general[['agent_number', 'last_update', 'last_status', 'current_page', 'progress', 'sms_sent', 'calls_done' ,'errors']]
         elif ('sms_sent' in data_general.columns):
+            data_general['sms_sent']
             data_general = data_general[['agent_number', 'last_update', 'last_status', 'current_page', 'progress', 'sms_sent','errors']]
+            
         elif ('calls_done' in data_general.columns):
             data_general = data_general[['agent_number', 'last_update', 'last_status', 'current_page', 'progress', 'calls_done','errors']]
 
             
+    data_general_raw["page"] = data_general_raw.current_page.apply(lambda x: int(x.split("/")[0]))
+        
+    data_general = data_general.sort_values(by = "last_update", ascending=False).drop_duplicates(subset = ["agent_number"], keep="first")
     
+    data_general['progress'] = data_general.current_page.apply(lambda x: int(x.split("/")[0]) / int(x.split("/")[1]))
+
     data_general = data_general.sort_values(by = 'agent_number')
     return data_general, data_general_raw
 
