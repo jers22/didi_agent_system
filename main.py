@@ -130,6 +130,8 @@ def get_data(fecha_buscar, campaing = 'didi', aditional = ''):
     
     data_general['progress'] = data_general.current_page.apply(lambda x: int(x.split("/")[0]) / int(x.split("/")[1]))
 
+    data_general.agent_number = data_general.agent_number.apply(lambda x: str(x)[:11]).astype(int)
+    
     data_general = data_general.sort_values(by = 'agent_number')
     return data_general, data_general_raw
 
