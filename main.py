@@ -143,7 +143,7 @@ st.set_page_config(
 st.sidebar.title("Menú de Navegación")
 opcion = st.sidebar.selectbox(
     "Selecciona una opción:",
-    ("Agentes DiDi", "Agentes DiDi Crédito", "Gestiones BanCoppel", "Agentes Mutini")
+    ("Agentes DiDi", "Agentes DiDi Crédito", "Gestiones BanCoppel", "Gestiones Monte")
 )
 
 # ==========================================================================================
@@ -226,7 +226,8 @@ elif opcion == "Gestiones Monte":
     mes = fecha_seleccionada_[:-3].replace("-","_")
     
     bucket_name = 's3-pernexium-report-2'
-    file_key = f'master/monte_financiera/gestiones/{mes}/{mes}_gestiones.xlsx'  # Reemplaza con el nombre exacto del archivo
+    file_key = f'master/monte_financiera/actualizaciones/gestiones/{mes}/{mes}_gestiones.xlsx'  # Reemplaza con el nombre exacto del archivo
+
     
     # Nombre del archivo descargado en el sistema local
     try:
